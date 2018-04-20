@@ -6,6 +6,7 @@ import os.path
 import signal
 import sys
 import getopt
+import inspect
 import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version('AppIndicator3', '0.1')
@@ -19,7 +20,7 @@ from threading import Thread
 class Indicator():
     def __init__(self, filename):
         self.app = 'EmacsTaskIndicator'
-        iconpath = 'icon.png'
+        iconpath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))+'/icon.png'
         self.indicator = appindicator.Indicator.new(
             self.app,
             os.path.abspath(iconpath),
