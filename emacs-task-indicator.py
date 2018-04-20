@@ -21,6 +21,7 @@ class Indicator():
     def __init__(self, filename):
         self.app = 'EmacsTaskIndicator'
         iconpath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))+'/icon.png'
+        resticonpath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))+'/rest.png'
         self.indicator = appindicator.Indicator.new(
             self.app,
             os.path.abspath(iconpath),
@@ -29,7 +30,7 @@ class Indicator():
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(self.create_menu())
         self.indicator.set_label("loading...", self.app)
-        self.update = Thread(target=self.show_seconds, args=[filename])
+        self.update = Thread(target=self.show_seconds, args=[filename, iconpath, resticonpath])
 
         self.update.setDaemon(True)
         self.update.start()
@@ -42,7 +43,7 @@ class Indicator():
         menu.show_all()
         return menu
 
-    def show_seconds(self, filename):
+    def show_seconds(self, filename, iconpath, resticonpath):
         while True:
             if os.path.isfile(filename):
                 file = open(os.path.abspath(filename), "r")
@@ -54,14 +55,35 @@ class Indicator():
                 h = "%02d" % (seconds / 3600)
                 m = "%02d" % (seconds % 3600 / 60)
                 mention = '['+h+':'+m+'] '+res[1]
+                isWorking = 1
             else:
                 mention = '休息时间～～～'
-            GObject.idle_add(
-                self.indicator.set_label,
-                mention, self.app,
-                priority=GObject.PRIORITY_DEFAULT
-            )
-            time.sleep(5)
+                isWorking = 0
+
+            if isWorking == 1:
+                GObject.idle_add(
+                    self.indicator.set_icon,
+                    os.path.abspath(iconpath),
+                    priority=GObject.PRIORITY_DEFAULT
+                )
+                GObject.idle_add(
+                    self.indicator.set_label,
+                    mention, self.app,
+                    priority=GObject.PRIORITY_DEFAULT
+                )
+            else:
+                GObject.idle_add(
+                    self.indicator.set_icon,
+                    os.path.abspath(resticonpath),
+                    priority=GObject.PRIORITY_DEFAULT
+                )
+                GObject.idle_add(
+                    self.indicator.set_label,
+                    mention, self.app,
+                    priority=GObject.PRIORITY_DEFAULT
+                )
+
+            time.sleep(0.2)
 
     def stop(self, source):
         gtk.main_quit()
